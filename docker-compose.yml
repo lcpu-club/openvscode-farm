@@ -25,7 +25,7 @@ services:
     command: ['openvscode-farm']
     environment:
       LISTEN: '0.0.0.0:3030'
-      DATA_DIR: '${data_dir}'
+      IMAGE_NAME: '${image_name:-gitpod/openvscode-server}'
       CONTAINER_URL: '${container_url:-http://localhost:{port}/?tkn={token}}'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
