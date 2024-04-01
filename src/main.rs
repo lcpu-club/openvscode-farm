@@ -3,7 +3,7 @@ use clap::Parser;
 use log::error;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
-use std::{net::SocketAddr, path::Path, str::FromStr, sync::Arc};
+use std::{net::SocketAddr, str::FromStr, sync::Arc};
 use tokio::process::Command;
 use warp::{reject::Rejection, reply::Reply, Filter};
 
@@ -18,9 +18,9 @@ struct Cli {
     #[arg(short, long, env)]
     container_url: Option<String>,
 
-    /// Data directory
+    /// Image name
     #[arg(short, long, env)]
-    data_dir: Option<String>,
+    image_name: Option<String>,
 }
 
 #[derive(Debug)]
@@ -61,10 +61,10 @@ fn get_routes<'a>(args: &Cli) -> impl Filter<Extract = impl Reply, Error = Rejec
             .to_owned()
             .unwrap_or("http://localhost:{port}/?tkn={token}".to_string()),
     );
-    let data_dir = Arc::new(
-        args.data_dir
+    let image_name = Arc::new(
+        args.image_name
             .to_owned()
-            .unwrap_or("/opt/vscs-farm".to_string()),
+            .unwrap_or("gitpod/openvscode-server".to_string()),
     );
 
     let start = warp::path!("start")
@@ -72,16 +72,13 @@ fn get_routes<'a>(args: &Cli) -> impl Filter<Extract = impl Reply, Error = Rejec
         .and(warp::header::<String>("X-Forwarded-Access-Token"))
         .and_then(move |access_token: String| {
             let container_url = container_url.clone();
-            let data_dir = data_dir.clone();
+            let image_name = image_name.clone();
             async move {
                 let user_id = parse_access_token(&access_token)?;
-                let user_data_dir = Path::new(data_dir.as_ref()).join(&user_id);
-                let user_data_dir = user_data_dir.to_str().unwrap();
                 // Use user_id to create a unique container name
                 Command::new("docker")
                     .arg("run")
                     .arg("-d")
-                    .arg("--rm")
                     .arg("--name")
                     .arg(format!("vscs-{}", user_id))
                     .arg("--init")
@@ -89,12 +86,7 @@ fn get_routes<'a>(args: &Cli) -> impl Filter<Extract = impl Reply, Error = Rejec
                     .arg("")
                     .arg("-p")
                     .arg("3000")
-                    .arg("-v")
-                    .arg(format!(
-                        "{}:/home/workspace:z,cached",
-                        user_data_dir
-                    ))
-                    .arg("gitpod/openvscode-server")
+                    .arg(image_name.as_str())
                     .arg("sh")
                     .arg("-c")
                     .arg("exec ${OPENVSCODE_SERVER_ROOT}/bin/openvscode-server \"${@}\"")
@@ -104,6 +96,16 @@ fn get_routes<'a>(args: &Cli) -> impl Filter<Extract = impl Reply, Error = Rejec
                     .arg("--host")
                     .arg("0.0.0.0")
                     .arg("--enable-remote-auto-shutdown")
+                    .output()
+                    .await
+                    .map_err(|e| {
+                        error!("Failed to start container: {}", e);
+                        warp::reject::reject()
+                    })?;
+                // Start the container
+                Command::new("docker")
+                    .arg("start")
+                    .arg(format!("vscs-{}", user_id))
                     .output()
                     .await
                     .map_err(|e| {
