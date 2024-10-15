@@ -11,9 +11,8 @@
 
 #!.yarn/cache
 .pnp.*
-
-local/*
-!local/.gitkeep
-
 node_modules
-.env
+
+/lib
+tsconfig.tsbuildinfo
+package.tgz

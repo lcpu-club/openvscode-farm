@@ -1,0 +1,50 @@
+{
+  "name": "aoi-cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "aoi": "lib/bin.js"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepack": "run build"
+  },
+  "dependencies": {
+    "@aoi-js/common": "^1.1.0",
+    "@clack/prompts": "^0.7.0",
+    "@sinclair/typebox": "^0.33.12",
+    "archiver": "^7.0.1",
+    "c12": "^2.0.0",
+    "clipanion": "^4.0.0-rc.4",
+    "consola": "^3.2.3",
+    "fs-extra": "^11.2.0",
+    "gray-matter": "^4.0.3",
+    "ky": "^1.7.2",
+    "marked": "^13.0.3",
+    "marked-terminal": "^7.1.0",
+    "sanitize-filename": "^1.6.3",
+    "typanion": "^3.14.0",
+    "zx": "^8.1.8"
+  },
+  "devDependencies": {
+    "@types/archiver": "^6.0.2",
+    "@types/eslint": "^9.6.1",
+    "@types/fs-extra": "^11.0.4",
+    "@types/marked-terminal": "^6.1.1",
+    "@types/node": "^22.7.4",
+    "@typescript-eslint/eslint-plugin": "^8.7.0",
+    "@typescript-eslint/parser": "^8.7.0",
+    "eslint": "^9.11.1",
+    "prettier": "^3.3.3",
+    "typedoc": "^0.26.7",
+    "typescript": "^5.6.2"
+  }
+}
